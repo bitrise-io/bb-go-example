@@ -1,0 +1,43 @@
+version: 2
+jobs:
+  build:
+    docker:
+    - image: cimg/go:1.21.4
+    steps:
+    - checkout
+    - run: go version
+    - run: go env
+    - restore_cache:
+        name: Restore $GOMODCACHE Cache
+        keys:
+        # Find a cache corresponding to this specific package-lock.json checksum
+        # when this file is changed, this key will fail
+        - &gomodcache-key v1-gomodcache-{{ arch }}-{{ .Branch }}-{{ checksum "./go.sum" }}
+        - v1-gomodcache-{{ arch }}-{{ .Branch }}-
+        - v1-gomodcache-{{ arch }}-
+    - restore_cache:
+        name: Restore $GOCACHE Cache
+        keys:
+        # Find a cache corresponding to this specific package-lock.json checksum
+        # when this file is changed, this key will fail
+        - &gocache-key v1-gocache-{{ arch }}-{{ .Branch }}-{{ .Revision }}
+        - v1-gocache-{{ arch }}-{{ .Branch }}-
+        - v1-gocache-{{ arch }}-
+    - run: go mod download -x
+    - run: go test -v ./...
+    - run: |
+        cd hello
+        go build -o hello .
+        
+        ./hello -g Welcome Bitrise 
+        ./hello -r -g Welcome Bitrise
+    - save_cache:
+        name: Save $GOMODCACHE Cache
+        key: *gomodcache-key
+        paths:
+        - /home/circleci/go/pkg/mod
+    - save_cache:
+        name: Save $GOCACHE Cache
+        key: *gocache-key
+        paths:
+        - /home/circleci/.cache/go-build
