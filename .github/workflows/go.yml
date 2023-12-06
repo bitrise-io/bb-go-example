@@ -20,6 +20,6 @@ jobs:
     - name: Build
       run: |
         cd hello
-        go build -v -o hello .
+        go build -v -x -o hello .
         ./hello -g Welcome Bitrise 
         ./hello -r -g Welcome Bitrise
